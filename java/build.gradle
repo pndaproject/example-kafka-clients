@@ -1,0 +1,94 @@
+apply plugin: 'java'
+
+repositories {
+    mavenCentral()
+}
+
+sourceCompatibility = JavaVersion.VERSION_1_7
+
+version = '0.1'
+
+dependencies {
+    compile group: 'org.slf4j', name: 'slf4j-log4j12', version: '1.7.2'
+    compile group: 'org.apache.kafka', name: 'kafka_2.11', version: '0.8.2.0'
+    compile group: 'org.apache.avro', name: 'avro', version: '1.7.5'
+    //compile group: 'commons-codec', name: 'commons-codec', version: '1.5'
+    //compile group: 'org.apache.clerezza.ext', name: 'org.json.simple', version: '0.4'
+    //compile group: 'org.codehaus.jackson', name: 'jackson-mapper-asl', version: '1.9.2'
+    testCompile group: 'junit', name: 'junit', version: '4.+'
+}
+
+uploadArchives {
+    repositories {
+       flatDir {
+           dirs 'repos'
+       }
+    }
+}
+
+compileJava {
+    options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+}
+
+sourceSets {
+    main {
+        java {
+            exclude 'com/cisco/old/*.java'
+        }
+    }
+}
+
+
+/* task flatJar(type: Jar) {
+    baseName = project.name + '-all'
+    manifest {
+        attributes 'Main-Class': 'com.cisco.dataplatform.Consumer2Tcp',
+                   'Implementation-Title': 'Simple Kafka to TCP receiver',
+                   'Implementation-Version': version
+    }
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+} */
+
+/*task cleanUpBefore(type: Delete) {
+  println ': cleanUpBefore'
+  delete 'build/classes'
+  println ': cleanUpBefore done'
+}*/
+
+
+
+//task consumer(type: Jar, dependsOn: 'cleanUpBefore') {
+task consumer(type: Jar) {
+    println ': consumer build'
+    baseName = 'consumer2tcp'
+    manifest {
+        attributes 'Main-Class': 'com.cisco.dataplatform.Consumer2Tcp',
+                   'Implementation-Title': 'Simple Kafka Consumer to TCP receiver',
+                   'Implementation-Version': version
+    }
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    {
+       exclude "com/cisco/dataplatform/Producer*.class"
+    }
+    with jar
+}
+
+
+task producer(type: Jar) {
+    println ': producer build'
+    baseName = 'producer'
+    manifest {
+        attributes 'Main-Class': 'com.cisco.dataplatform.AProducer',
+                   'Implementation-Title': 'Simple Kafka Avro Producer',
+                   'Implementation-Version': version
+    }
+    from {
+          configurations.compile.collect {
+                         it.isDirectory() ? it : zipTree(it)
+          }
+    }  {
+       exclude "com/cisco/dataplatform/Consumer*.class"
+    }
+    with jar
+}

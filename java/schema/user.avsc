@@ -1,0 +1,10 @@
+{"namespace": "com.cisco.dataplatform",
+ "type": "record",
+ "name": "User",
+ "fields": [
+     {"name": "name",    "type": "string"},
+     {"name": "color",   "type": "string"},
+     {"name": "number",  "type": "int"},
+     {"name": "song",    "type": "string"}
+ ]
+}
