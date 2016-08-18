@@ -27,12 +27,9 @@ import datetime
 import avro.schema
 import avro.io
 import random
-from kafka.client import KafkaClient
-from kafka.producer import SimpleProducer, KeyedProducer
- 
-kafka = KafkaClient("ip6-localhost:9092")
-producer = SimpleProducer(kafka)
- 
+from kafka import KafkaProducer
+import ssl
+
 # Path to user.avsc avro schema
 schema_path="./dataplatform-raw.avsc"
  
@@ -43,13 +40,14 @@ schema = avro.schema.parse(open(schema_path).read())
 extra=False 
 loopMode=False
 rangeValue=1
+sslEnable=False
 
 current_milli_time = lambda: int(round(time.time() * 1000))
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:],"he:l",["extra=", "loop="])
+    opts, args = getopt.getopt(sys.argv[1:],"he:lz",["extra=", "loop="])
 except getopt.GetoptError:
-    print('producer.py [-e true] [-l true] ')
+    print('producer.py [-e true] [-l true] [-z]')
     sys.exit(2)
 for opt, arg in opts:
       if opt == '-h':
@@ -62,8 +60,18 @@ for opt, arg in opts:
          print("loop mode")
          loopMode = True
          rangeValue=1000
+      elif opt in ("-z"):
+        sslEnable=True
 
 extrabytes = bytes('')
+
+if( sslEnable):
+  ctx = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+  ctx.load_cert_chain(certfile="../../streamset/ca-cert", keyfile="../../streamset/ca-key", password="test1234")
+  producer = KafkaProducer(bootstrap_servers=["ip6-localhost:9093"],security_protocol="SSL",ssl_context=ctx)
+else:
+  producer = KafkaProducer(bootstrap_servers=["ip6-localhost:9092"])
+
 
 for i in xrange(rangeValue):
       writer = avro.io.DatumWriter(schema)
@@ -76,6 +84,6 @@ for i in xrange(rangeValue):
       if extra:
            elements = [0, 0, 0, 0, 23]
            extrabytes = bytes(bytearray(elements))
-      producer.send_messages(topic, extrabytes+raw_bytes)
+      producer.send(topic, extrabytes+raw_bytes)
       if rangeValue > 1:
             time.sleep(0.5)
