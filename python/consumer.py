@@ -92,7 +92,7 @@ class Consumer(threading.Thread):
 
     print("on topic %s" % topic)
 
-    if( sslEnable):
+    if(sslEnable):
       print("seeting up SSL to PROTOCOL_TLSv1")
       ctx = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
       ctx.load_cert_chain(certfile="../ca-cert", keyfile="../ca-key", password="test1234")
