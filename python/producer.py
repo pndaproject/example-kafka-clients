@@ -67,7 +67,7 @@ extrabytes = bytes('')
 
 if( sslEnable):
   ctx = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
-  ctx.load_cert_chain(certfile="../../streamset/ca-cert", keyfile="../../streamset/ca-key", password="test1234")
+  ctx.load_cert_chain(certfile="../ca-cert", keyfile="..//ca-key", password="test1234")
   producer = KafkaProducer(bootstrap_servers=["ip6-localhost:9093"],security_protocol="SSL",ssl_context=ctx)
 else:
   producer = KafkaProducer(bootstrap_servers=["ip6-localhost:9092"])
