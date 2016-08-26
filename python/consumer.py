@@ -36,7 +36,7 @@ schema_id = 23
 schema = avro.schema.parse(open(schema_path).read())
 useextra = False
 useavro = False
-sslEnable=False
+sslEnable = False
 
 def consume_message(message):
 
@@ -92,11 +92,12 @@ class Consumer(threading.Thread):
 
     print("on topic %s" % topic)
 
-    if(sslEnable):
-      print("seeting up SSL to PROTOCOL_TLSv1")
+    if sslEnable:
+      print("setting up SSL to PROTOCOL_TLSv1")
       ctx = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
       ctx.load_cert_chain(certfile="../ca-cert", keyfile="../ca-key", password="test1234")
-      consumer = KafkaConsumer(bootstrap_servers=["ip6-localhost:9093"],security_protocol="SSL",ssl_context=ctx)
+      consumer = KafkaConsumer(bootstrap_servers=["ip6-localhost:9093"],security_protocol="SASL_SSL",ssl_context=ctx,\
+    sasl_mechanism="PLAIN",sasl_plain_username="test",sasl_plain_password="test", group_id="test")
     else:
       consumer = KafkaConsumer(bootstrap_servers=["ip6-localhost:9092"])
 
@@ -118,7 +119,7 @@ class Consumer(threading.Thread):
           print('-'*60)
 
 def main(argv):
-  global useavro, useextra
+  global useavro, useextra, sslEnable
   try:
     opts, args = getopt.getopt(argv,"he:sz",["extra=", "serialized="])
   except getopt.GetoptError:

@@ -65,10 +65,13 @@ for opt, arg in opts:
 
 extrabytes = bytes('')
 
-if( sslEnable):
+if sslEnable:
+  print("setting up SSL to PROTOCOL_TLSv1")
   ctx = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
-  ctx.load_cert_chain(certfile="../ca-cert", keyfile="..//ca-key", password="test1234")
-  producer = KafkaProducer(bootstrap_servers=["ip6-localhost:9093"],security_protocol="SSL",ssl_context=ctx)
+  ctx.load_cert_chain(certfile="../ca-cert", keyfile="../ca-key", password="test1234")
+  producer = KafkaProducer(bootstrap_servers=["ip6-localhost:9093"],security_protocol="SASL_SSL",\
+    ssl_context=ctx,\
+    sasl_mechanism="PLAIN",sasl_plain_username="test",sasl_plain_password="test")
 else:
   producer = KafkaProducer(bootstrap_servers=["ip6-localhost:9092"])
 
