@@ -27,8 +27,8 @@ import getopt
 from StringIO import StringIO
 import avro.schema
 import avro.io
-from kafka.client import KafkaClient
-from kafka.consumer import SimpleConsumer
+from kafka import KafkaConsumer, TopicPartition
+import ssl
 
 # Path to user.avsc avro schema
 schema_path = "./dataplatform-raw.avsc"
@@ -36,15 +36,17 @@ schema_id = 23
 schema = avro.schema.parse(open(schema_path).read())
 useextra = False
 useavro = False
+sslEnable = False
 
 def consume_message(message):
 
-  newmessage = message[1][3]
+  print(message)
+  newmessage = message.value
   if not useavro and not useextra:
-    print(message[1][3])
+    print(message.value)
   else:
     print('<'*10)
-    b = bytearray(message[1][3])
+    b = bytearray(newmessage)
     if b[0] != 0:
       print('-'*60)
       print("MAGIC_BYTE error")
@@ -80,7 +82,7 @@ class Consumer(threading.Thread):
 
   @classmethod
   def run(self):
-    global useavro, useextra, schema_id
+    global useavro, useextra, schema_id, sslEnable
     print("start Consumer")
 
     if useavro: 
@@ -88,12 +90,23 @@ class Consumer(threading.Thread):
     else:
      topic="raw.log.localtest"
 
-    client = KafkaClient("ip6-localhost:9092")
-    consumer = SimpleConsumer(client, "py-user-avro", topic)
+    print("on topic %s" % topic)
+
+    if sslEnable:
+      print("setting up SSL to PROTOCOL_TLSv1")
+      ctx = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+      ctx.load_cert_chain(certfile="../ca-cert", keyfile="../ca-key", password="test1234")
+      consumer = KafkaConsumer(bootstrap_servers=["ip6-localhost:9093"],security_protocol="SASL_SSL",ssl_context=ctx,\
+    sasl_mechanism="PLAIN",sasl_plain_username="test",sasl_plain_password="test", group_id="test")
+    else:
+      consumer = KafkaConsumer(bootstrap_servers=["ip6-localhost:9092"])
+
+    consumer.assign([TopicPartition(topic, 0)])
+
     ## Skip the consumer to the head of the log - this is a personal choice
     ## It mean we are loosing messages when the py consumer was off
     ## Not a problem for testing purposes
-    consumer.seek(0,2)
+    #consumer.seek(0,2)
 
     for message in consumer:
       print('-'*60)
@@ -106,9 +119,9 @@ class Consumer(threading.Thread):
           print('-'*60)
 
 def main(argv):
-  global useavro, useextra
+  global useavro, useextra, sslEnable
   try:
-    opts, args = getopt.getopt(argv,"he:s:",["extra=", "serialized="])
+    opts, args = getopt.getopt(argv,"he:sz",["extra=", "serialized="])
   except getopt.GetoptError:
     print('consumer.py [-e|--extra true] [-a|--avro true]')
     sys.exit(2)
@@ -123,6 +136,9 @@ def main(argv):
     elif opt in ("-s", "--serialized"):
      print('avro serialization required')
      useavro=True
+    elif opt in ("-z"):
+      print('SSL required')
+      sslEnable=True
 
 
 if __name__ == "__main__":
