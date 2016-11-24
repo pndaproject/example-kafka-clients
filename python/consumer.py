@@ -42,34 +42,35 @@ def consume_message(message):
 
   print(message)
   newmessage = message.value
-  if not useavro and not useextra:
+  if not useavro:
     print(message.value)
   else:
-    print('<'*10)
-    b = bytearray(newmessage)
-    if b[0] != 0:
-      print('-'*60)
-      print("MAGIC_BYTE error")
-      print('-'*60)
-    else:
-      print('Magic Byte match')
-
-    ## Check schema Id
-    ## This is a test program. If errors, do not stop the program
-    ## but display Alerts
-    if len(b) >= 5:
-        b_schema_id=bytearray(b[1:5])
-        b_schema = struct.unpack('>I', b_schema_id)[0]
-        print("Read scheme Id: [",b_schema,"] expected: [",schema_id,"]")
-        if b_schema != schema_id:
-             print('!'*10)
-             print("Schema IDs do not match")
-    else:
-        print("Cant decode byte array")
-
-    ## Remove extra header for pure Avro Record binary decoding
-    del b[0:5]
-    newmessage=b
+    if useextra:
+      print('<'*10)
+      b = bytearray(newmessage)
+      if b[0] != 0:
+        print('-'*60)
+        print("MAGIC_BYTE error")
+        print('-'*60)
+      else:
+        print('Magic Byte match')
+  
+      ## Check schema Id
+      ## This is a test program. If errors, do not stop the program
+      ## but display Alerts
+      if len(b) >= 5:
+          b_schema_id=bytearray(b[1:5])
+	  b_schema = struct.unpack('>I', b_schema_id)[0]
+          print("Read scheme Id: [",b_schema,"] expected: [",schema_id,"]")
+          if b_schema != schema_id:
+               print('!'*10)
+               print("Schema IDs do not match")
+      else:
+          print("Cant decode byte array")
+  
+      ## Remove extra header for pure Avro Record binary decoding
+      del b[0:5]
+      newmessage=b
 
     bytes_reader = io.BytesIO(newmessage)
     decoder = avro.io.BinaryDecoder(bytes_reader)
@@ -123,14 +124,14 @@ def main(argv):
   try:
     opts, args = getopt.getopt(argv,"he:sz",["extra=", "serialized="])
   except getopt.GetoptError:
-    print('consumer.py [-e|--extra true] [-a|--avro true]')
+    print('consumer.py [-e|--extra true] [-s|--serialized true]')
     sys.exit(2)
   for opt, arg in opts:
     if opt == '-h':
      print('consumer.py [-e|--extra true] [-s|--serialized true]')
      sys.exit(0)
     elif opt in ("-e", "--extra"):
-     print('extra header required required')
+     print('extra header required')
      useextra=True
      print('extra set')
     elif opt in ("-s", "--serialized"):
