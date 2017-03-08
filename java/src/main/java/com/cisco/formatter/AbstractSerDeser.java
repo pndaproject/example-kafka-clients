@@ -217,7 +217,7 @@ public abstract class AbstractSerDeser {
 
   protected Schema createSchema() {
     try {
-        return new Schema.Parser().parse(new File(schemaFile));;
+        return new Schema.Parser().parse(new File(schemaFile));
     } catch (Exception ex) {
         logger.error(ex);
         throw new SerializationException("schema initialization failed");
