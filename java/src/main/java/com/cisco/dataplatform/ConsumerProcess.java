@@ -35,11 +35,6 @@ import java.net.*;
 import java.nio.ByteBuffer;
 import org.codehaus.jackson.io.JsonStringEncoder;
 
-public class ConsumerProcessException extends Exception {
-    public ConsumerProcessException(String message) {
-        super(message);
-    }
-}
 
 public class ConsumerProcess implements Runnable
 {
@@ -78,7 +73,7 @@ public class ConsumerProcess implements Runnable
         }
         catch (Exception ex) {
             logger.error((Object)"The default init method for an empty record may not be valid with the schema: ", (Throwable)ex);
-            throw new ConsumerProcessException(ex);
+            System.exit(-1);
         }
 
         // Connect to the external TCP target
@@ -201,22 +196,20 @@ public class ConsumerProcess implements Runnable
             try {
                 while (true) {
                     try {
-                        this.externalTcpConn = new Socket(this.globalConfig.getProperty(Constants.PROP_OUTPUT_HOST), Integer.parseInt(this.globalConfig.getProperty("output.port")));
+                        this.externalTcpConn = new Socket(this.globalConfig.getProperty(Constants.PROP_OUTPUT_HOST), Integer.parseInt(this.globalConfig.getProperty(Constants.PROP_OUTPUT_PORT)));
                         this.externalTcpOs = this.externalTcpConn.getOutputStream();
+                        return;
                     }catch (UnknownHostException e) {
                         logger.error((Object)(this.mThreadNumber + ": externalTcp cnx error host unknown: " + e));
                         Thread.sleep(Constants.TCP_THREAD_SLEEP_INT);
                     }catch (IOException e2) {
                         logger.error((Object)(this.mThreadNumber + ": externalTcp cnx error: " + e2));
                         Thread.sleep(Constants.TCP_THREAD_SLEEP_INT);
-                    }finally{
-                        this.externalTcpConn.close();
                     }
                 }
             }
             catch (InterruptedException ie) {
                 logger.error(ie);
-                throw ie;
             }
         }
     }

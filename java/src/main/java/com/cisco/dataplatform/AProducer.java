@@ -39,17 +39,7 @@ import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
 import java.util.concurrent.ExecutorService;
 import com.cisco.dataplatform.ConfigParser;
-import com.cisco.dataplatform.ConfigParserException;
-
-/**
- * The worker thread, which does the actual job of formatting messages to be pushed to Kafka
- * Behind the scenes of kafka API, the worker will read input messages, serialize them and then push to K
- */
-public class AProducerException extends Exception {
-    public AProducerException(String message) {
-        super(message);
-    }
-}
+import java.io.IOException;
 
 public class AProducer {
     
@@ -118,7 +108,6 @@ public class AProducer {
         } 
           catch (Exception ex) {
             logger.error("unexpected error when preparing producer configuration: "+ex.getMessage());
-            throw new AProducerException(ex);
         }
 
         return new ProducerConfig(props);
@@ -131,12 +120,12 @@ public class AProducer {
 
         String  topic=mainConfig.getProperty(Constants.PROP_KAFKA_TOPIC);
         String  msgSerialization=mainConfig.getProperty(Constants.PROP_SERIALIZATION);
-        String   msgHostIp;
+        String   msgHostIp = null;
         String   producerSource=mainConfig.getProperty(Constants.PROP_PRODUCER_MSG_SRC);
         String   nicName=mainConfig.getProperty(Constants.PROP_PRODUCER_NIC_4_HOST_IP);
         String   srcHostIpFormat=mainConfig.getProperty(Constants.PROP_PRODUCER_FORMAT_IP);
         String   srcHostIpDefault=mainConfig.getProperty(Constants.PROP_PRODUCER_IP_DEFAULT);
-        Schema  schema;
+        Schema  schema = null;
 
         logger.info("Message Host IP shall be resolved with NIC ["+nicName+"]");
         logger.info("Message Host IP shall resolved IP address with format ["+srcHostIpFormat+"]");
@@ -152,12 +141,10 @@ public class AProducer {
             }
             if (msgHostIp == null || msgHostIp.length() == 0) {
                 logger.error("Could not find an IP address for setting IP src into kafka messages");
-                throw new AProducerException("Could not find an IP address for setting IP src into kafka messages");
             }
             logger.info("Message will use host_ip set to ["+msgHostIp+"]");
         } catch (Exception ex) {
             logger.error(ex.getMessage());
-            throw new AProducerException(ex);
         }
 
         try {
@@ -165,7 +152,6 @@ public class AProducer {
             schema = new Schema.Parser().parse(new File(mainConfig.getProperty(Constants.PROP_AVRO_SCHEMA)));
         } catch (Exception ex) {
             logger.error(ex.getMessage());
-            throw new AProducerException(ex);
         }
 
         try {
@@ -181,7 +167,7 @@ public class AProducer {
                         logger.info("Partition Key (optional) >> ");
                         String mykey = in.readLine();
                         if (msgSerialization.equalsIgnoreCase(Constants.STR_SERIALIZATION_RAW)) {
-                            keyedMessage = new KeyedMessage<>(topic, mykey, msgStr.getBytes());
+                            keyedMessage = new KeyedMessage<String, Object>(topic, mykey, msgStr.getBytes());
                         }
                         else {
                             // AVRO encoding
@@ -189,7 +175,7 @@ public class AProducer {
                             srec.put("timestamp", System.currentTimeMillis());
                             srec.put("host_ip",   (String) msgHostIp);
                             srec.put("rawdata",   (ByteBuffer) ByteBuffer.wrap(msgStr.getBytes()));
-                            keyedMessage = new KeyedMessage<>(topic, mykey, srec);
+                            keyedMessage = new KeyedMessage<String, Object>(topic, mykey, srec);
                         }
                         producer.send(keyedMessage);
                     }
@@ -198,7 +184,6 @@ public class AProducer {
         }
         catch (Exception ex) {
             logger.error("unexpected error: ", ex);
-            throw new AProducerException(ex);
         } 
     }
 
@@ -217,7 +202,7 @@ public class AProducer {
 
             ConfigParser.parseConfig(args[0], mainConfig, logger, Constants.PROP_MD_BROKER_LIST);
 
-        } catch (ConfigParserException e) {
+        } catch (IOException e) {
             logger.error(e);
             System.exit(-1);
         } 
@@ -230,11 +215,9 @@ public class AProducer {
             }
         } catch (InterruptedException ie) {
             logger.error(ie);
-            throw ie;
             System.exit(-1);
-        } catch (AProducerException ex) {
+        } catch (Exception ex) {
             logger.error(ex);
-            throw ex;
             System.exit(-1);
         }
 
