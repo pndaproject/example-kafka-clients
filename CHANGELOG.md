@@ -1,7 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## [Unreleased]
+### Fixed
+- PNDA-3499: Cleanup CHANGELOG with missing release info.
 
 ## [0.2.2] 2017-05-23
 ### Changed
