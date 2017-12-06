@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [Unreleased] XXXX-XX-XX
+### Changed
+- [ PNDA-2788 ]: Fix issues on java sample code
+
 ## [0.2.1] 2016-12-12
 ### Changed
 - Put parsing of the extra magic number behind the 'useextra' flag

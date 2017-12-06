@@ -36,7 +36,6 @@ import kafka.utils.VerifiableProperties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import com.cisco.dataplatform.ConfigParser;
-import com.cisco.dataplatform.ConfigParserException;
 
 public class Consumer2Tcp {
     
@@ -135,7 +134,7 @@ public class Consumer2Tcp {
             
             ConfigParser.parseConfig(args[0], mainConfig, logger,Constants.PROP_ZK_HOST);
 
-        } catch (ConfigParserException e) {
+        } catch (Exception e) {
             logger.error(e);
             System.exit(-1);
         }
@@ -149,7 +148,6 @@ public class Consumer2Tcp {
             }
         } catch (InterruptedException ie) {
             logger.error(ie);
-            throw ie;
         }
         consumer.shutdown();
         System.exit(0);

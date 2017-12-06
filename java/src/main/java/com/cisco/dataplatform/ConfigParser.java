@@ -27,22 +27,21 @@ import java.io.InputStream;
 import java.io.IOException;
 import org.apache.log4j.Level;
 import com.cisco.shared.Constants;
-
-public class ConfigParserException extends Exception {
-    public ConfigParserException(String message) {
-        super(message);
-    }
-}
+import org.apache.log4j.Logger;
+import java.util.Properties;
+import java.io.FileInputStream;
 
 public class ConfigParser {
 
-	public void parseConfig(String configFile, Properties mainConfig, Logger logger, String list){
+	public static void parseConfig(String configFile, Properties mainConfig, Logger logger, String list) throws IOException {
 
         logger.info("Properties file to be used: ["+configFile+"]");
         // Load the configuration for this program
-        try (
-            InputStream inputConfigFile = new FileInputStream(configFile);
-        ){
+        InputStream inputConfigFile = null;
+        try {
+
+            inputConfigFile = new FileInputStream(configFile);
+
             // load a properties file
             mainConfig.load(inputConfigFile);
  
@@ -73,18 +72,18 @@ public class ConfigParser {
 	        }
 	        else {
 	            logger.error("file ["+mainConfig.getProperty(Constants.PROP_AVRO_SCHEMA)+"] does not exists - bad news");
-	            throw new ConfigParserException("file ["+mainConfig.getProperty(Constants.PROP_AVRO_SCHEMA)+"] does not exists - bad news");
 	        }
 
         } catch (IOException ex) {
-        	logger.error(ex);
-            throw new ConfigParserException("Example: java -jar producer-<version>.jar <configFile>");
+        	logger.error("Example: java -jar producer-<version>.jar <configFile>"+ex.getMessage());
+        	throw ex;
         } finally {
             if (inputConfigFile != null) {
                 try {
                     inputConfigFile.close();
                 } catch (IOException e) {
                     logger.error(e);
+                    throw e;
                 }
             }
         }
