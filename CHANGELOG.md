@@ -1,9 +1,15 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
-## [Unreleased] XXXX-XX-XX
+## [Unreleased]
+
+## [0.2.3] 2017-11-24
+### Fixed
+- PNDA-3499: Cleanup CHANGELOG with missing release info.
+
+## [0.2.2] 2017-05-23
 ### Changed
-- [ PNDA-2788 ]: Fix issues on java sample code
+- PNDA-2788: Fix issues on java sample code
 
 ## [0.2.1] 2016-12-12
 ### Changed
