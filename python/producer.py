@@ -1,3 +1,4 @@
+# pylint: disable=line-too-long
 """
 Name:       Sample python code for Kafka Client
 Purpose:    Producing messages to Kafka topics
@@ -20,73 +21,76 @@ Unless required by applicable law or agreed to separately in writing, software d
 License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 express or implied.
 """
-
+# pylint: disable=import-error
 import io
-import sys, getopt, time
-import datetime
+import sys
+import getopt
+import time
+import random
+import ssl
 import avro.schema
 import avro.io
-import random
 from kafka import KafkaProducer
-import ssl
 
+# pylint: disable=invalid-name
 # Path to user.avsc avro schema
-schema_path="./dataplatform-raw.avsc"
- 
+schema_path = "./dataplatform-raw.avsc"
+
 # Kafka topic
 topic = "avro.log.localtest"
 schema = avro.schema.parse(open(schema_path).read())
 
-extra=False 
-loopMode=False
-rangeValue=1
-sslEnable=False
+extra = False
+loopMode = False
+rangeValue = 1
+sslEnable = False
 
 current_milli_time = lambda: int(round(time.time() * 1000))
-
+# pylint: disable=superfluous-parens
 try:
-    opts, args = getopt.getopt(sys.argv[1:],"he:lz",["extra=", "loop="])
+    opts, args = getopt.getopt(sys.argv[1:], "he:lz", ["extra=", "loop="])
 except getopt.GetoptError:
     print('producer.py [-e true] [-l true] [-z]')
     sys.exit(2)
 for opt, arg in opts:
-      if opt == '-h':
-         print('producer.py [-e true] [-l true]')
-         sys.exit()
-      elif opt in ("-e", "--extra"):
-         print("extra header requested")
-         extra = True
-      elif opt in ("-l", "--loop"):
-         print("loop mode")
-         loopMode = True
-         rangeValue=1000
-      elif opt in ("-z"):
-        sslEnable=True
+    if opt == '-h':
+        print('producer.py [-e true] [-l true]')
+        sys.exit()
+    elif opt in ("-e", "--extra"):
+        print("extra header requested")
+        extra = True
+    elif opt in ("-l", "--loop"):
+        print("loop mode")
+        loopMode = True
+        rangeValue = 1000
+    elif opt in ("-z"):
+        sslEnable = True
 
 extrabytes = bytes('')
 
 if sslEnable:
-  print("setting up SSL to PROTOCOL_TLSv1")
-  ctx = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
-  ctx.load_cert_chain(certfile="../ca-cert", keyfile="../ca-key", password="test1234")
-  producer = KafkaProducer(bootstrap_servers=["ip6-localhost:9093"],security_protocol="SASL_SSL",\
+    # pylint: disable=no-member
+    print("setting up SSL to PROTOCOL_TLSv1")
+    ctx = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+    ctx.load_cert_chain(certfile="../ca-cert", keyfile="../ca-key", password="test1234")
+    producer = KafkaProducer(bootstrap_servers=["ip6-localhost:9093"], security_protocol="SASL_SSL",\
     ssl_context=ctx,\
-    sasl_mechanism="PLAIN",sasl_plain_username="test",sasl_plain_password="test")
+    sasl_mechanism="PLAIN", sasl_plain_username="test", sasl_plain_password="test")
 else:
-  producer = KafkaProducer(bootstrap_servers=["ip6-localhost:9092"])
+    producer = KafkaProducer(bootstrap_servers=["ip6-localhost:9092"])
 
 
 for i in xrange(rangeValue):
-      writer = avro.io.DatumWriter(schema)
-      bytes_writer = io.BytesIO()
-      encoder = avro.io.BinaryEncoder(bytes_writer)
-      #Prepare our msg data
-      rawvarie="python-random-"+str(random.randint(10,10000))+"-loop-"+str(i)
-      writer.write({"timestamp": current_milli_time(), "src": "ESC", "host_ip": "my_ipv6", "rawdata": rawvarie}, encoder)
-      raw_bytes = bytes_writer.getvalue()
-      if extra:
-           elements = [0, 0, 0, 0, 23]
-           extrabytes = bytes(bytearray(elements))
-      producer.send(topic, extrabytes+raw_bytes)
-      if rangeValue > 1:
-            time.sleep(0.5)
+    writer = avro.io.DatumWriter(schema)
+    bytes_writer = io.BytesIO()
+    encoder = avro.io.BinaryEncoder(bytes_writer)
+    #Prepare our msg data
+    rawvarie = "python-random-"+str(random.randint(10, 10000))+"-loop-"+str(i)
+    writer.write({"timestamp": current_milli_time(), "src": "ESC", "host_ip": "my_ipv6", "rawdata": rawvarie}, encoder)
+    raw_bytes = bytes_writer.getvalue()
+    if extra:
+        elements = [0, 0, 0, 0, 23]
+        extrabytes = bytes(bytearray(elements))
+    producer.send(topic, extrabytes+raw_bytes)
+    if rangeValue > 1:
+        time.sleep(0.5)
